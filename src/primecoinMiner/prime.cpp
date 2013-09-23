@@ -929,7 +929,7 @@ bool MineProbablePrimeChain(CSieveOfEratosthenes*& psieve, primecoinBlock_t* blo
       }
 		//if( nProbableChainLength > 0x03000000 )
 		//	primeStats.qualityPrimesFound++;
-		primeStats.bestPrimeChainDifficultySinceLaunch = std::max(primeStats.bestPrimeChainDifficultySinceLaunch, nProbableChainLength);
+		primeStats.bestPrimeChainDifficultySinceLaunch = std::max((unsigned int)primeStats.bestPrimeChainDifficultySinceLaunch, nProbableChainLength);
 
 
       if(nProbableChainLength >= block->serverData.nBitsForShare)

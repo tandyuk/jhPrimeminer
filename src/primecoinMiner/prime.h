@@ -55,10 +55,9 @@ extern DWORD * threadHearthBeat;
 // Generate small prime table
 void GeneratePrimeTable(unsigned int nSieveSize);
 // Get next prime number of p
-//bool PrimeTableGetNextPrime(unsigned int* p);
-bool PrimeTableGetNextPrime(unsigned int& p);
+bool PrimeTableGetNextPrime(unsigned int p);
 // Get previous prime number of p
-bool PrimeTableGetPreviousPrime(unsigned int& p);
+bool PrimeTableGetPreviousPrime(unsigned int p);
 
 // Compute primorial number p#
 void BNPrimorial(unsigned int p, CBigNum& bnPrimorial);
@@ -143,6 +142,7 @@ class CSieveOfEratosthenes
    unsigned int nSievePercentage; // weave up to a percentage of primes
     unsigned int nSieveExtensions; // extend the sieve a given number of times
 	unsigned int nAllocatedSieveSize;
+	//unsigned int nBits; // target of the prime chain to search for
     mpz_class mpzHash; // hash of the block header
     mpz_class mpzFixedMultiplier; // fixed round multiplier
 
@@ -183,7 +183,6 @@ class CSieveOfEratosthenes
    unsigned int nSieveLayers; // sieve layers
    unsigned int nPrimes; // number of times to weave the sieve
    unsigned int nTotalPrimes;
-    
     //CBlockIndex* pindexPrev;
     
    __inline unsigned int GetWordNum(unsigned int nBitNum) {
@@ -376,6 +375,7 @@ public:
       //nCandidateCount = nCandidates;
         return nCandidates;
     }
+
 
     // Scan for the next candidate multiplier (variable part)
     // Return values:

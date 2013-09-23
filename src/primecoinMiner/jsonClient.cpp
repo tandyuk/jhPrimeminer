@@ -224,7 +224,7 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 		struct timeval tv;
 		FD_ZERO(&fds) ;
 		FD_SET(serverSocket, &fds) ;
-		tv.tv_sec = 10; // timeout 10 seconds after the last recv
+		tv.tv_sec = 2; // timeout 10 seconds after the last recv
 		tv.tv_usec = 0;
 		// wait until timeout or data received.
 		n = select(serverSocket, &fds, NULL, NULL, &tv ) ;

@@ -75,28 +75,15 @@ typedef struct
 
 jsonObject_t* jsonParser_parse(uint8* stream, uint32 dataLength);
 
+typedef struct _jsonRpcServer_t jsonRpcServer_t;
+
 #define JSON_INITIAL_RECV_BUFFER_SIZE	(1024*4) // 4KB
 #define JSON_MAX_RECV_BUFFER_SIZE	(1024*1024*4) // 4MB
-
-typedef struct jsonRpcServer_t
-{
-#ifdef _WIN32
-	SOCKET acceptSocket;
-#else
-	int acceptSocket;
-#endif
-	simpleList_t* list_connections;
-}jsonRpcServer_t;
-
 
 typedef struct  
 {
 	jsonRpcServer_t* jsonRpcServer;
-#ifdef _WIN32
-	SOCKET clientSocket;
-#else
 	int clientSocket;
-#endif
 	bool disconnected;
 	// recv buffer
 	uint32 recvIndex;
@@ -110,6 +97,12 @@ typedef struct
 	char httpAuthUsername[64];
 	char httpAuthPassword[64];
 }jsonRpcClient_t;
+
+typedef struct _jsonRpcServer_t
+{
+	int acceptSocket;
+	simpleList_t* list_connections;
+}jsonRpcServer_t;
 
 // server
 jsonRpcServer_t* jsonRpc_createServer(uint16 port);
@@ -127,6 +120,7 @@ jsonObject_t* jsonObject_getArrayElement(jsonObject_t* jsonObject, uint32 index)
 bool jsonObject_isTrue(jsonObject_t* jsonObject);
 double jsonObject_getNumberValueAsDouble(jsonObject_t* jsonObject);
 sint32 jsonObject_getNumberValueAsS32(jsonObject_t* jsonObject);
+uint32 jsonObject_getNumberValueAsU32(jsonObject_t* jsonObject);
 
 // object deallocation
 void jsonObject_freeStringData(uint8* stringBuffer);

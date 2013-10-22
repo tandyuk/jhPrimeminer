@@ -1,5 +1,5 @@
 #include"global.h"
-
+#include <iostream>
 /*
  * Called when a packet with the opcode XPT_OPC_S_AUTH_ACK is received
  */
@@ -23,16 +23,20 @@ bool xptClient_processPacket_authResponse(xptClient_t* xptClient)
 	if( authErrorCode == 0 )
 	{
 		xptClient->clientState = XPT_CLIENT_STATE_LOGGED_IN;
+		if(!commandlineInput.silent){
 			std::cout << "xpt: Logged in" << std::endl;
 			if( rejectReason[0] != '\0' )
 				std::cout << "Message from server: " << rejectReason << std::endl;
 	}
+	}
 	else
 	{
 		// error logging in -> disconnect
+		if(!commandlineInput.silent){
 			std::cout << "xpt: Failed to log in" << std::endl;
 		if( rejectReason[0] != '\0' )
 			std::cout << "Reason: " << rejectReason << std::endl;
+		}
 		return false;
 	}
 	return true;
@@ -58,11 +62,13 @@ bool xptClient_processPacket_blockData1(xptClient_t* xptClient)
 	uint32 payloadNum = xptPacketbuffer_readU32(xptClient->recvBuffer, &recvError);							// payload num
 	if( recvError )
 	{
+		if(!commandlineInput.silent && !commandlineInput.quiet)
 			std::cout << "xptClient_processPacket_blockData1(): Parse error" << std::endl;
 		return false;
 	}
 	if( xptClient->payloadNum != payloadNum )
 	{
+		if(!commandlineInput.silent && !commandlineInput.quiet)
 			std::cout << "xptClient_processPacket_blockData1(): Invalid payloadNum" << std::endl;
 		return false;
 	}
@@ -73,6 +79,7 @@ bool xptClient_processPacket_blockData1(xptClient_t* xptClient)
 	}
 	if( recvError )
 	{
+		if(!commandlineInput.silent && !commandlineInput.quiet)
 			std::cout << "xptClient_processPacket_blockData1(): Parse error 2" << std::endl;
 		return false;
 	}
@@ -108,6 +115,7 @@ bool xptClient_processPacket_shareAck(xptClient_t* xptClient)
 		valid_shares++;
 		time_t now = time(0);
 		char* dt = ctime(&now);
+		if(!commandlineInput.silent)
 			std::cout << "ACCEPTED [ " << valid_shares << " / " << total_shares << " val: " << shareValue << "] " << dt << std::endl;
 		primeStats.fShareValue += shareValue;
 		primeStats.fBlockShareValue += shareValue;
@@ -117,9 +125,12 @@ bool xptClient_processPacket_shareAck(xptClient_t* xptClient)
 	{
 		// error logging in -> disconnect
 		total_shares++;
+		if(!commandlineInput.silent){
 			std::cout << "Invalid share" << std::endl;
 			if( rejectReason[0] != '\0' )
 				std::cout << "Reason: " << rejectReason << std::endl;
+		}
 	}
+
 	return true;
 }

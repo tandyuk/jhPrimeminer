@@ -86,7 +86,6 @@ jsonObject_t* jsonParser_parseObject(jsonParser_t* jsonParser)
 		{
 			// start of raw object
 			jsonObjectRawObject_t* jsonObjectRawObject = (jsonObjectRawObject_t*)malloc(sizeof(jsonObjectRawObject_t));
-			//RtlZeroMemory(jsonObjectRawObject, sizeof(jsonObjectRawObject_t));
 			memset(jsonObjectRawObject, 0, sizeof(jsonObjectRawObject_t));
 			jsonObjectRawObject->baseObject.type = JSON_TYPE_OBJECT;
 			jsonObjectRawObject->list_paramPairs = customBuffer_create(4, sizeof(jsonObjectRawObjectParameter_t));
@@ -170,7 +169,6 @@ jsonObject_t* jsonParser_parseObject(jsonParser_t* jsonParser)
 			(jsonParser->dataCurrentPtr[3] == 'e' || jsonParser->dataCurrentPtr[3] == 'E') )
 		{
 			jsonObjectBool_t* jsonObjectBool = (jsonObjectBool_t*)malloc(sizeof(jsonObjectBool_t));
-			//RtlZeroMemory(jsonObjectBool, sizeof(jsonObjectBool_t));
 			memset(jsonObjectBool, 0, sizeof(jsonObjectBool_t));
 			jsonObjectBool->baseObject.type = JSON_TYPE_BOOL;
 			jsonObjectBool->isTrue = true;
@@ -185,7 +183,6 @@ jsonObject_t* jsonParser_parseObject(jsonParser_t* jsonParser)
 			(jsonParser->dataCurrentPtr[4] == 'e' || jsonParser->dataCurrentPtr[4] == 'E') )
 		{
 			jsonObjectBool_t* jsonObjectBool = (jsonObjectBool_t*)malloc(sizeof(jsonObjectBool_t));
-			//RtlZeroMemory(jsonObjectBool, sizeof(jsonObjectBool_t));
 			memset(jsonObjectBool, 0, sizeof(jsonObjectBool_t));
 			jsonObjectBool->baseObject.type = JSON_TYPE_BOOL;
 			jsonObjectBool->isTrue = false;
@@ -202,7 +199,6 @@ jsonObject_t* jsonParser_parseObject(jsonParser_t* jsonParser)
 			}
 			// setup string
 			jsonObjectString_t* jsonObjectString = (jsonObjectString_t*)malloc(sizeof(jsonObjectString_t));
-			//RtlZeroMemory(jsonObjectString, sizeof(jsonObjectString_t));
 			memset(jsonObjectString, 0, sizeof(jsonObjectString_t));
 			jsonObjectString->baseObject.type = JSON_TYPE_STRING;
 			jsonObjectString->stringData = stringData;
@@ -213,7 +209,6 @@ jsonObject_t* jsonParser_parseObject(jsonParser_t* jsonParser)
 		{
 			// start of array
 			jsonObjectArray_t* jsonObjectArray = (jsonObjectArray_t*)malloc(sizeof(jsonObjectArray_t));
-			//RtlZeroMemory(jsonObjectArray, sizeof(jsonObjectArray_t));
 			memset(jsonObjectArray, 0, sizeof(jsonObjectArray_t));
 			jsonObjectArray->baseObject.type = JSON_TYPE_ARRAY;
 			jsonObjectArray->list_values = simpleList_create(4);
@@ -296,7 +291,6 @@ jsonObject_t* jsonParser_parseObject(jsonParser_t* jsonParser)
 			}
 			// set number
 			jsonObjectNumber_t* jsonObjectNumber = (jsonObjectNumber_t*)malloc(sizeof(jsonObjectNumber_t));
-			//RtlZeroMemory(jsonObjectNumber, sizeof(jsonObjectNumber_t));
 			memset(jsonObjectNumber, 0, sizeof(jsonObjectNumber_t));
 			jsonObjectNumber->baseObject.type = JSON_TYPE_NUMBER;
 			jsonObjectNumber->divider = divider;
@@ -308,7 +302,6 @@ jsonObject_t* jsonParser_parseObject(jsonParser_t* jsonParser)
 			jsonParser->dataCurrentPtr += 4;
 			// for NULL objects we dont need any data stored, so we use the pure jsonObject_t object
 			jsonObject_t* jsonObject = (jsonObject_t*)malloc(sizeof(jsonObject_t));
-			//RtlZeroMemory(jsonObject, sizeof(jsonObject_t));
 			memset(jsonObject, 0, sizeof(jsonObject_t));
 			jsonObject->type = JSON_TYPE_NULL;
 			return (jsonObject_t*)jsonObject;

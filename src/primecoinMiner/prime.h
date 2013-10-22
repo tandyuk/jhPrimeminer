@@ -17,11 +17,7 @@ typedef unsigned long sieve_word_t;
 #endif
 
 //#include "main.h"
-#ifdef _WIN32
-#include "mpirxx.h"
-#else
 #include <gmpxx.h>
-#endif
 
 extern std::vector<unsigned int> vPrimes;
 static const unsigned int nMaxSieveExtensions = 20;
@@ -50,7 +46,7 @@ static const mpz_class mpzPrimeMin = (mpzOne << 255);
 
 extern unsigned int nTargetInitialLength;
 extern unsigned int nTargetMinLength;
-extern DWORD * threadHearthBeat;
+extern uint64 * threadHearthBeat;
 
 // Generate small prime table
 void GeneratePrimeTable(unsigned int nSieveSize);
@@ -268,6 +264,10 @@ public:
       free(vCunningham2Multipliers);
     }
 
+
+	unsigned int getSieveExtensions(){
+		return this->nSieveExtensions;
+	}
 
    void Init(unsigned int nSieveSize, unsigned int nSievePercentage, unsigned int nSieveExtensions, unsigned int nTargetChainLength, unsigned int nTargetBTLength, mpz_class& mpzHash, mpz_class& mpzFixedMultiplier)
     {

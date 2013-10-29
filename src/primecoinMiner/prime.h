@@ -6,15 +6,10 @@
 #define PRIMECOIN_PRIME_H
 
 #include <cstdlib>
-#if defined(__i386__) || defined(_M_IX86) || defined(_X86_) || defined(__x86_64__) || defined(_M_X64)
 #define USE_ROTATE
-#endif
 
-#ifdef _M_X64
+
 typedef uint64 sieve_word_t;
-#else
-typedef unsigned long sieve_word_t;
-#endif
 
 //#include "main.h"
 #include <gmpxx.h>

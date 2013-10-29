@@ -8,12 +8,14 @@ stream_t *stream_create(streamSettings_t *settings, void *object)
 	stream->bitIndex = 0;
 	stream->bitReadIndex = 0;
 	stream->bitReadBufferState = 0;
+	if( stream->settings->initStream )
 	stream->settings->initStream(object, stream);
 	return stream;
 }
 
 void stream_destroy(stream_t *stream)
 {
+	if( stream->settings->destroyStream )
 	stream->settings->destroyStream(stream->object, stream);
 	free(stream);
 }
@@ -138,6 +140,8 @@ uint32 stream_getSeek(stream_t *stream)
 
 uint32 stream_getSize(stream_t *stream)
 {
+	if( stream->settings->getSize == NULL )
+		return 0xFFFFFFFF;
 	return stream->settings->getSize(stream->object);
 }
 
@@ -347,7 +351,6 @@ void streamEx_dynamicMemoryRange_setSeek(void *object, sint32 seek, bool relativ
 {
 	streamEx_dynamicMemoryRange_t* memoryRangeObj = (streamEx_dynamicMemoryRange_t*)object;
 	memoryRangeObj->bufferPosition = seek;
-	if( memoryRangeObj->bufferPosition < 0 ) memoryRangeObj->bufferPosition = 0;
 	if( memoryRangeObj->bufferPosition > memoryRangeObj->bufferSize ) memoryRangeObj->bufferPosition = memoryRangeObj->bufferSize;
 }
 
@@ -569,7 +572,7 @@ void* streamEx_map(stream_t* stream, sint32* size)
 
 sint32 streamEx_readStringNT(stream_t* stream, char* str, uint32 strSize)
 {
-	for(sint32 i=0; i<strSize-1; i++)
+	for(uint32 i=0; i<strSize-1; i++)
 	{
 		str[i] = stream_readS8(stream);
 		if( str[i] == '\0' )

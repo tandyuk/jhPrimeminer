@@ -197,7 +197,7 @@ bitclientTransaction_t* bitclient_createCoinbaseTransactionFromSeed(uint32 seed,
 	vInput->sequence = -1;
 	bitclient_addScriptU32(vInput, blockHeight, true);
 	bitclient_addScriptData(vInput, (uint8*)&seed, 4, true);
-	uint32 seed2 = seed_userId ^ 0xf83220df + seed_userId * 29481 + seed_userId * 3;
+	uint32 seed2 = (seed_userId ^ 0xf83220df + seed_userId * 29481 + seed_userId * 3);
 	bitclient_addScriptData(vInput, (uint8*)&seed2, 4, true);
 	bitclient_addScriptData(vInput, (uint8*)"jhPrimeminer", 12, true);
 	bitclient_addScriptData(vInput, (uint8*)"/P2SH/", 6, false); // coinbase flags...

@@ -1,6 +1,5 @@
 #include"global.h"
 #include "ticker.h"
-//#include<intrin.h>
 #include<ctime>
 #include<map>
 #include <termios.h>            //termios, TCSANOW, ECHO, ICANON
@@ -13,8 +12,8 @@
 #endif
 
 
-primeStats_t primeStats = {0};
-commandlineInput_t commandlineInput = {0};
+primeStats_t primeStats = {};
+commandlineInput_t commandlineInput = {};
 volatile int total_shares = 0;
 volatile int valid_shares = 0;
 unsigned int nMaxSieveSize;
@@ -268,7 +267,7 @@ bool bSoloMining = false;
 workData_t workData;
 int lastBlockCount = 0;
 
-jsonRequestTarget_t jsonRequestTarget; // rpc login data
+jsonRequestTarget_t jsonRequestTarget = {}; // rpc login data
 bool useLocalPrimecoindForLongpoll;
 
 /*
@@ -278,10 +277,8 @@ bool useLocalPrimecoindForLongpoll;
 * Note that the primecoin data can be larger due to the multiplier at the end, so we use 512 bytes per default
 * 29.sep: switched to 512 bytes per block as default, since Primecoin can use up to 2000 bits (250 bytes) for the multiplier chain + length prefix of 2 bytes
 */
-bool jhMiner_pushShare_primecoin(uint8 data[512], primecoinBlock_t* primecoinBlock)
-{
-	if( workData.protocolMode == MINER_PROTOCOL_GETWORK )
-	{
+bool jhMiner_pushShare_primecoin(uint8 data[512], primecoinBlock_t* primecoinBlock){
+	if( workData.protocolMode == MINER_PROTOCOL_GETWORK ){
 		// prepare buffer to send
 		fStr_buffer4kb_t fStrBuffer_parameter;
 		fStr_t* fStr_parameter = fStr_alloc(&fStrBuffer_parameter, FSTR_FORMAT_UTF8);
@@ -293,17 +290,13 @@ bool jhMiner_pushShare_primecoin(uint8 data[512], primecoinBlock_t* primecoinBlo
 		// send request
 		sint32 rpcErrorCode = 0;
 		jsonObject_t* jsonReturnValue = jsonClient_request(&jsonRequestTarget, "getwork", fStr_parameter, &rpcErrorCode);
-		if( jsonReturnValue == NULL )
-		{
+		if( jsonReturnValue == NULL ){
 			printf("PushWorkResult failed :(\n");
 			return false;
-		}
-		else
-		{
+		}else{
 			// rpc call worked, sooooo.. is the server happy with the result?
 			jsonObject_t* jsonReturnValueBool = jsonObject_getParameter(jsonReturnValue, "result");
-			if( jsonObject_isTrue(jsonReturnValueBool) )
-			{
+			if( jsonObject_isTrue(jsonReturnValueBool) ){
 				total_shares++;
 				valid_shares++;
 				time_t now = time(0);
@@ -312,9 +305,7 @@ bool jhMiner_pushShare_primecoin(uint8 data[512], primecoinBlock_t* primecoinBlo
 				//printf("[ %d / %d ] %s",valid_shares, total_shares,dt);
 				jsonObject_freeObject(jsonReturnValue);
 				return true;
-			}
-			else
-			{
+			}else{
 				total_shares++;
 				// the server says no to this share :(
 				printf("Server rejected share (BlockHeight: %d/%d nBits: 0x%08X)\n", primecoinBlock->serverData.blockHeight, jhMiner_getCurrentWorkBlockHeight(primecoinBlock->threadIndex), primecoinBlock->serverData.client_shareBits);
@@ -324,9 +315,7 @@ bool jhMiner_pushShare_primecoin(uint8 data[512], primecoinBlock_t* primecoinBlo
 		}
 		jsonObject_freeObject(jsonReturnValue);
 		return false;
-	}
-	else if( workData.protocolMode == MINER_PROTOCOL_GBT )
-	{
+	}else if( workData.protocolMode == MINER_PROTOCOL_GBT ){
 		// use submitblock
 		char* methodName = "submitblock";
 		// get multiplier
@@ -379,33 +368,24 @@ bool jhMiner_pushShare_primecoin(uint8 data[512], primecoinBlock_t* primecoinBlo
 		stream_destroy(blockStream);
 		free(blockData);
 		// process result
-		if( jsonReturnValue == NULL )
-		{
+		if( jsonReturnValue == NULL ){
 			printf("SubmitBlock failed :(\n");
 			return false;
-		}
-		else
-		{
+		}else{
 			// is the bitcoin client happy with the result?
 			jsonObject_t* jsonReturnValueRejectReason = jsonObject_getParameter(jsonReturnValue, "result");
-			if( jsonObject_getType(jsonReturnValueRejectReason) == JSON_TYPE_NULL )
-			{
+			if( jsonObject_getType(jsonReturnValueRejectReason) == JSON_TYPE_NULL ){
 				printf("Valid block found!\n");
 				jsonObject_freeObject(jsonReturnValue);
 				return true;
-			}
-			else
-			{
+			}else{
 				// :( the client says no
 				printf("Coin daemon rejected block :(\n");
 				jsonObject_freeObject(jsonReturnValue);
 				return false;
 			}
 		}
-
-	}
-	else if( workData.protocolMode == MINER_PROTOCOL_XPUSHTHROUGH )
-	{
+	}else if( workData.protocolMode == MINER_PROTOCOL_XPUSHTHROUGH ){
 		// printf("Queue share\n");
 		xptShareToSubmit_t* xptShareToSubmit = (xptShareToSubmit_t*)malloc(sizeof(xptShareToSubmit_t));
 		memset(xptShareToSubmit, 0x00, sizeof(xptShareToSubmit_t));
@@ -427,13 +407,12 @@ bool jhMiner_pushShare_primecoin(uint8 data[512], primecoinBlock_t* primecoinBlo
 			xptClient_foundShare(workData.xptClient, xptShareToSubmit);
 			lastShareSubmit = getTimeMilliseconds();
 			return true;
-		}
-		else
-		{
+		}else{
 			std::cout << "Share submission failed. The client is not connected to the pool." << std::endl;
 			return false;
 		}
 	}
+	return false;
 }
 
 int queryLocalPrimecoindBlockCount(bool useLocal)
@@ -1167,6 +1146,52 @@ void jhMiner_parseCommandline(int argc, char **argv)
 			}
 			cIdx++;
 		}
+else if (memcmp(argument, "-m2", 3) == 0) {
+			// -primes
+			if (cIdx >= argc) {
+				cout << "Missing number after -m2 option" << endl;
+				exit(0);
+			}
+			commandlineInput.primorialMultiplier2 = atoi(argv[cIdx]);
+			if (commandlineInput.primorialMultiplier2 < 5
+					|| commandlineInput.primorialMultiplier2 > 1009) {
+				cout
+						<< "-m2 parameter out of range, must be between 5 - 1009 and should be a prime number"
+						<< endl;
+				exit(0);
+			}
+			cIdx++;
+		} else if (memcmp(argument, "-m3", 3) == 0) {
+			// -primes
+			if (cIdx >= argc) {
+				cout << "Missing number after -m3 option" << endl;
+				exit(0);
+			}
+			commandlineInput.primorialMultiplier3 = atoi(argv[cIdx]);
+			if (commandlineInput.primorialMultiplier3 < 5
+					|| commandlineInput.primorialMultiplier3 > 1009) {
+				cout
+						<< "-m3 parameter out of range, must be between 5 - 1009 and should be a prime number"
+						<< endl;
+				exit(0);
+			}
+			cIdx++;
+		} else if (memcmp(argument, "-m4", 3) == 0) {
+			// -primes
+			if (cIdx >= argc) {
+				cout << "Missing number after -m4 option" << endl;
+				exit(0);
+			}
+			commandlineInput.primorialMultiplier4 = atoi(argv[cIdx]);
+			if (commandlineInput.primorialMultiplier4 < 5
+					|| commandlineInput.primorialMultiplier4 > 1009) {
+				cout
+						<< "-m4 parameter out of range, must be between 5 - 1009 and should be a prime number"
+						<< endl;
+				exit(0);
+			}
+			cIdx++;
+		}
 		else if( memcmp(argument, "-tune", 6)==0 )
 		{
 			// -tune
@@ -1297,7 +1322,7 @@ void jhMiner_parseCommandline(int argc, char **argv)
 
 
 
-
+/*
 bool bOptimalL1SearchInProgress = false;
 void *CacheAutoTuningWorkerThread(void * arg)
 {
@@ -1367,7 +1392,7 @@ void *CacheAutoTuningWorkerThread(void * arg)
 	}
 }
 
-
+*/
 
 
 
@@ -1471,12 +1496,12 @@ void *input_thread(void *){
 			PrintCurrentSettings();
 			break;
 		case 'u': case 'U':
-			if (!bOptimalL1SearchInProgress && nMaxSieveSize < 10000000)
+			if (nMaxSieveSize < 10000000)
 				nMaxSieveSize += 32000;
 			std::cout << "Sieve size: " << nMaxSieveSize << std::endl;
 			break;
 		case 'j': case 'J':
-			if (!bOptimalL1SearchInProgress && nMaxSieveSize > 100000)
+			if (nMaxSieveSize > 100000)
 				nMaxSieveSize -= 32000;
 			std::cout << "Sieve size: " << nMaxSieveSize << std::endl;
 			break;
@@ -1507,7 +1532,6 @@ void *input_thread(void *){
 void OnNewBlock(double nBitsShare, double nBits, unsigned long blockHeight)
 {
 	double totalRunTime = (double)(getTimeMilliseconds() - primeStats.startTime);
-	double statsPassedTime = (double)(getTimeMilliseconds() - primeStats.primeLastUpdate);
 	double poolDiff = GetPrimeDifficulty( nBitsShare );
 	double blockDiff = GetPrimeDifficulty( nBits );
 	if(!commandlineInput.silent && commandlineInput.quiet){
@@ -1543,10 +1567,6 @@ void PrintStat()
 		double primesPerSecond = (double)primeStats.primeChainsFound / (statsPassedTime / 1000.0);
 		float avgCandidatesPerRound = (double)primeStats.nCandidateCount / primeStats.nSieveRounds;
 		float sievesPerSecond = (double)primeStats.nSieveRounds / (statsPassedTime / 1000.0);
-
-		uint32 bestDifficulty = primeStats.bestPrimeChainDifficulty;
-		primeStats.bestPrimeChainDifficulty = 0;
-		float primeDifficulty = GetChainDifficulty(bestDifficulty);
 		float bestChainSinceLaunch = GetChainDifficulty(primeStats.bestPrimeChainDifficultySinceLaunch);
 		float shareValuePerHour = primeStats.fShareValue / totalRunTime * 3600000.0;
 		printf("\nVal/h:%8f - PPS:%d - SPS:%.03f - ACC:%d\n", shareValuePerHour, (sint32)primesPerSecond, sievesPerSecond, (sint32)avgCandidatesPerRound);
@@ -1559,7 +1579,7 @@ void PrintStat()
 		if (bestChainSinceLaunch >= 10)
 		{
 			printf("\n           ");
-			for(int i=10; i<=14; i++)
+			for(int i=10; i<=13; i++)
 			{
 				printf("%2d: %8.02f ", i, ((double)primeStats.chainCounter[0][i] / statsPassedTime) * 3600000.0);
 			}
@@ -1589,7 +1609,6 @@ int jhMiner_main_gbtMode()
 			primeStats.nSieveRounds = 0;
 		}		
 		// wait and check some stats
-		uint32 time_updateWork = getTimeMilliseconds();
 		if (appQuitSignal)
 			return 0;
 		int currentBlockCount = getBlockTemplateData.height;
@@ -1658,7 +1677,7 @@ int jhMiner_main_getworkMode()
 }
 
 
-int getIpAddr(char* ipText, char* addr) {
+void getIpAddr(char* ipText, char* addr) {
 	struct addrinfo hints, *res;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -1811,7 +1830,7 @@ int jhMiner_main_xptMode(){
 
 
 
-			if(bEnablenPrimorialMultiplierTuning){
+/*			if(bEnablenPrimorialMultiplierTuning){
 				float ratio = primeStats.nWaveTime == 0 ? 0 : ((float)primeStats.nWaveTime / (float)(primeStats.nWaveTime + primeStats.nTestTime)) * 100.0;
 				if(commandlineInput.printDebug){
 					std::cout << "Sieve/Test Ratio: " << ratio << std::endl;
@@ -1829,7 +1848,7 @@ int jhMiner_main_xptMode(){
 					}
 				}
 			}
-
+*/
 
 
 
@@ -1956,9 +1975,6 @@ int jhMiner_main_xptMode(){
 static void *watchdog_thread(void *){
 	uint32_t totalThreads = commandlineInput.numThreads+1;
 	pthread_t threads[totalThreads];
-
-
-
 	//	using namespace boost;
 	threadHearthBeat = (uint64_t *)malloc(commandlineInput.numThreads * sizeof(uint64_t));
 	//	threadIDs = (thread::id *)malloc(commandlineInput.numThreads * sizeof(thread::id));
@@ -1970,9 +1986,6 @@ static void *watchdog_thread(void *){
 	pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 	// start threads
 	uint32 maxTimeBetweenShareSubmit = commandlineInput.nullShareTimeout * 60 * 1000;		// Nice if it was a cmd line option, so it can be ajusted!
-
-
-
 	uint32 loopcount = 0;
 	uint32 looptime = 240;  //every minute
 
@@ -2028,9 +2041,8 @@ static void *watchdog_thread(void *){
 		//pthread_attr_destroy(&threadAttr);
 		Sleep(250);
 	}
-
-
-
+	std::cout << "Watchdog - Error something caused us to abort" << std::endl;
+	return false;
 }
 
 
@@ -2047,17 +2059,17 @@ int main(int argc, char **argv)
 	commandlineInput.roundSievePercentage = 70; // default 
 	commandlineInput.enableCacheTunning = false;
 	commandlineInput.L1CacheElements = 256000;
-	commandlineInput.primorialMultiplier = 0; // for default 0 we will switch auto tune on
+	commandlineInput.primorialMultiplier = 67; // for default 0 we will switch auto tune on
 	commandlineInput.targetOverride = 9;
-	commandlineInput.targetBTOverride = 10;
-	commandlineInput.initialPrimorial = 43;
+	commandlineInput.targetBTOverride = 9;
+	commandlineInput.initialPrimorial = 67;
 	commandlineInput.printDebug = false;
-	commandlineInput.sieveExtensions = 7;
+	commandlineInput.sieveExtensions = 9;
 	commandlineInput.disableInput = false;
 	commandlineInput.quiet = false;
 	commandlineInput.silent = false;
-	commandlineInput.nullShareTimeout = 30; //disabled by default
-	commandlineInput.sievePrimeLimit = 1000000;
+	commandlineInput.nullShareTimeout = 1440; //"disabled" by default - 24h with no shares seems fair
+	commandlineInput.sievePrimeLimit = 0;
 	commandlineInput.startL1CacheTune = false;
 	commandlineInput.startPrimeTune = false;
 	commandlineInput.startPrimorialTune = false;
@@ -2079,11 +2091,8 @@ int main(int argc, char **argv)
 	{
 		primeStats.nPrimorialMultiplier = commandlineInput.initialPrimorial;
 		bEnablenPrimorialMultiplierTuning = true;
-	}
-	else
-	{
+	} else {
 		primeStats.nPrimorialMultiplier = commandlineInput.primorialMultiplier;
-		bEnablenPrimorialMultiplierTuning = false;
 	}
 
 	if( commandlineInput.host == NULL){

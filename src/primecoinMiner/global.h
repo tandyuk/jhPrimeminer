@@ -25,8 +25,10 @@ typedef uint32_t DWORD;
 #include<stdio.h>
 #include<time.h>
 #include<set>
-
+#include<stdint.h>
 #include <iomanip>
+#include <fstream>
+
 #include"sha256.h"
 #include"ripemd160.h"
 //#include"bignum_custom.h"
@@ -55,7 +57,6 @@ int BN2_uadd(BIGNUM *r, const BIGNUM *a, const BIGNUM *b);
 #include"prime.h"
 #include"jsonrpc.h"
 
-#include<stdint.h>
 #include"xptServer.h"
 #include"xptClient.h"
 
@@ -74,6 +75,14 @@ static const uint64_t CENT = 1000000;
 static inline uint32_t swab32(uint32_t v)
 {
 	return bswap_32(v);
+}
+
+static inline void MyLog(const char* szString)
+{
+	std::ofstream myfile;
+	myfile.open ("logFile.txt",std::ios_base::out | std::ios_base::app);
+	myfile << szString << std::endl;
+	myfile.close();	
 }
 
 static inline void swap32yes(void*out, const void*in, size_t sz) {
@@ -140,7 +149,6 @@ typedef struct
 	volatile float nChainHit;
 	volatile float nPrevChainHit;
 	volatile unsigned int nPrimorialMultiplier;
-	
 	volatile float nSieveRounds;
 	volatile float nCandidateCount;
 	pthread_mutex_t cs;
@@ -151,9 +159,8 @@ typedef struct
 	volatile uint32 bestPrimeChainDifficulty;
 	volatile double bestPrimeChainDifficultySinceLaunch;
 	uint64 primeLastUpdate;
-	uint64 blockStartTime;
   	uint64 startTime;
-  
+	uint64 blockStartTime;
 	bool shareFound;
 	bool shareRejected;
 	volatile unsigned int nL1CacheElements;
@@ -222,6 +229,9 @@ typedef struct
 	uint32 sievePrimeLimit;	// how many primes should be sieved
 	unsigned int L1CacheElements;
 	unsigned int primorialMultiplier;
+	unsigned int primorialMultiplier2;
+	unsigned int primorialMultiplier3;
+	unsigned int primorialMultiplier4;
 	bool enableCacheTunning;
 	uint32 targetOverride;
 	uint32 targetBTOverride;

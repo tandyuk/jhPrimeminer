@@ -1,4 +1,5 @@
 #include"global.h"
+#include <signal.h>
 
 /*
  * Tries to find the parameter defined by the case-insenitive name.

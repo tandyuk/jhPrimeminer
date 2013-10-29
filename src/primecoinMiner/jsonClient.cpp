@@ -120,8 +120,7 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 	*errorCode = JSON_ERROR_NONE;
 	// create connection to host
   int serverSocket = jsonClient_openConnection(server->ip, server->port);
-	if( serverSocket == 0 )
-	{
+	if( serverSocket == 0 ){
 		*errorCode = JSON_ERROR_HOST_NOT_FOUND;
 		return NULL;
 	}
@@ -132,7 +131,6 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
   flags |= O_NONBLOCK;
   err = fcntl(serverSocket, F_SETFL, flags); //ignore errors for now..
 
-  uint64 startTime = getTimeMilliseconds();
 	// build json request data
 	// example: {"method": "getwork", "params": [], "id":0}
 	fStr_t* fStr_jsonRequestData = fStr_alloc(1024*512); // 64KB (this is also used as the recv buffer!)

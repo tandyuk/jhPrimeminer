@@ -205,6 +205,7 @@
     <ClCompile Include="jsonParser.cpp" />
     <ClCompile Include="jsonrpc.cpp" />
     <ClCompile Include="ticker.cpp" />
+    <ClCompile Include="transaction.cpp" />
     <ClCompile Include="xptClient.cpp" />
     <ClCompile Include="xptClientPacketHandler.cpp" />
     <ClCompile Include="xptPacketbuffer.cpp" />
@@ -219,6 +220,7 @@
     <ClInclude Include="bignum2.h" />
     <ClInclude Include="stats.h" />
     <ClInclude Include="ticker.h" />
+    <ClInclude Include="transaction.h" />
     <ClInclude Include="uint256.h" />
     <ClInclude Include="jhlib\bmp.h" />
     <ClInclude Include="jhlib\customBuffer.h" />
@@ -316,6 +318,10 @@
     <ClInclude Include="xptClient.h" />
     <ClInclude Include="xptServer.h" />
     <ClInclude Include="Z:\reportonly\c++\curl_basic.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Makefile" />
+    <None Include="..\..\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

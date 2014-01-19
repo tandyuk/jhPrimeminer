@@ -2,27 +2,14 @@ typedef struct _stream_t stream_t;
 
 typedef struct  
 {
-#ifdef _WIN32
-	uint32 (__fastcall *readData)(void *object, void *buffer, uint32 len);
-	uint32 (__fastcall *writeData)(void *object, void *buffer, uint32 len);
-	uint32 (__fastcall *getSize)(void *object);
-	void (__fastcall *setSize)(void *object, uint32 size);
-	uint32 (__fastcall *getSeek)(void *object);
-	void (__fastcall *setSeek)(void *object, sint32 seek, bool relative);
-	void (__fastcall *initStream)(void *object, stream_t *stream);
-	void (__fastcall *destroyStream)(void *object, stream_t *stream);
-#else 
-//#define gcc_fastcall __attribute__((fastcall))
-// wont be used on x64 linux, so using default calling convention for now
-  uint32 *readData(void *object, void *buffer, uint32 len);
-  uint32 *writeData(void *object, void *buffer, uint32 len);
-  uint32 *getSize(void *object);
-  void *setSize(void *object, uint32 size);
-  uint32 *getSeek(void *object);
-  void *setSeek(void *object, sint32 seek, bool relative);
-  void *initStream(void *object, stream_t *stream);
-  void *destroyStream(void *object, stream_t *stream);
-#endif
+	uint32 (*readData)(void *object, void *buffer, uint32 len);
+	uint32 (*writeData)(void *object, void *buffer, uint32 len);
+	uint32 (*getSize)(void *object);
+	void (*setSize)(void *object, uint32 size);
+	uint32 (*getSeek)(void *object);
+	void (*setSeek)(void *object, sint32 seek, bool relative);
+	void (*initStream)(void *object, stream_t *stream);
+	void (*destroyStream)(void *object, stream_t *stream);
 	// general settings
 	bool allowCaching;
 }streamSettings_t;

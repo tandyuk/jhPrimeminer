@@ -2,17 +2,6 @@
 #include "ticker.h"
 #include <iostream>
 
-#ifdef _WIN32
-SOCKET jsonClient_openConnection(char *IP, int Port)
-{
-	SOCKET s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
-	SOCKADDR_IN addr;
-	memset(&addr,0,sizeof(SOCKADDR_IN));
-	addr.sin_family=AF_INET;
-	addr.sin_port=htons(Port);
-	addr.sin_addr.s_addr=inet_addr(IP);
-	int result = connect(s,(SOCKADDR*)&addr,sizeof(SOCKADDR_IN));
-#else
 int jsonClient_openConnection(char *IP, int Port)
 {
   int s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
@@ -22,7 +11,6 @@ int jsonClient_openConnection(char *IP, int Port)
   addr.sin_port=htons(Port);
   addr.sin_addr.s_addr=inet_addr(IP);
   int result = connect(s,(sockaddr*)&addr,sizeof(sockaddr_in));
-#endif
 	if( result )
 	{
 		return 0;
@@ -131,32 +119,18 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
   using namespace std;
 	*errorCode = JSON_ERROR_NONE;
 	// create connection to host
-#ifdef _WIN32
-	SOCKET serverSocket = jsonClient_openConnection(server->ip, server->port);
-#else
   int serverSocket = jsonClient_openConnection(server->ip, server->port);
-#endif
-	if( serverSocket == 0 )
-	{
+	if( serverSocket == 0 ){
 		*errorCode = JSON_ERROR_HOST_NOT_FOUND;
 		return NULL;
 	}
 
 
-#ifdef _WIN32
-	// set socket as non-blocking
-	unsigned int nonblocking=1;
-	unsigned int cbRet;
-	WSAIoctl(serverSocket, FIONBIO, &nonblocking, sizeof(nonblocking), NULL, 0, (LPDWORD)&cbRet, NULL, NULL);
-#else
   int flags, err;
   flags = fcntl(serverSocket, F_GETFL, 0); 
   flags |= O_NONBLOCK;
   err = fcntl(serverSocket, F_SETFL, flags); //ignore errors for now..
-#endif
 
-	//uint32 startTime = GetTickCount(); // todo: Replace with crossplatform method
-//  uint64 startTime = getTimeMilliseconds();   unused
 	// build json request data
 	// example: {"method": "getwork", "params": [], "id":0}
 	fStr_t* fStr_jsonRequestData = fStr_alloc(1024*512); // 64KB (this is also used as the recv buffer!)
@@ -191,11 +165,13 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 	fStr_appendFormatted(fStr_headerData, "Content-Length: %d\r\n", fStr_len(fStr_jsonRequestData));
 	fStr_appendFormatted(fStr_headerData, "\r\n"); // empty line concludes the header
 	// send header and data
-	uint64 startTime = getTimeMilliseconds();
+
+	if(commandlineInput.printDebug){
+		std::cout << "JSON Header: " << fStr_get(fStr_headerData) << std::endl;
+		std::cout << "JSON Request: " << fStr_get(fStr_jsonRequestData) << std::endl;
+	}
 	send(serverSocket, fStr_get(fStr_headerData), fStr_len(fStr_headerData), 0);
-//	std::cout << "Headers: " << fStr_get(fStr_headerData) << std::endl;
 	send(serverSocket, fStr_get(fStr_jsonRequestData), fStr_len(fStr_jsonRequestData), 0);
-//	std::cout << "Request: " << fStr_get(fStr_jsonRequestData) << std::endl;
 	// receive header and request data
 	uint8* recvBuffer = (uint8*)fStr_get(fStr_jsonRequestData);
 	uint32 recvLimit = fStr_getLimit(fStr_jsonRequestData);
@@ -210,11 +186,7 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 		{
 			printf("JSON-RPC warning: Response is larger than buffer\n");
 			// todo: Eventually we should dynamically enlarge the buffer
-#ifdef _WIN32
-			closesocket(serverSocket);
-#else
 	      close(serverSocket);
-#endif
 		fStr_free(fStr_jsonRequestData);
 			return NULL;
 		}
@@ -224,14 +196,13 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 		struct timeval tv;
 		FD_ZERO(&fds) ;
 		FD_SET(serverSocket, &fds) ;
-		tv.tv_sec = 10; // timeout 10 seconds after the last recv
+		tv.tv_sec = 30; // timeout 30 seconds after the last recv
 		tv.tv_usec = 0;
 		// wait until timeout or data received.
 		n = select(serverSocket, &fds, NULL, NULL, &tv ) ;
 /*		if( n == 0)
 		{
-			//uint32 passedTime = GetTickCount() - startTime;
-      uint64 passedTime = getTimeMilliseconds() - startTime;
+   			uint64 passedTime = getTimeMilliseconds() - startTime;
 			printf("JSON request timed out after %lums\n", passedTime);
     
 			break;
@@ -240,7 +211,8 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 		{
 			printf("JSON receive error\n");
 			break;
-		}*/
+		}
+*/
 		int32_t r = recv(serverSocket, (char*)(recvBuffer+recvIndex), remainingRecvSize, 0);
 		if( r <= 0 )
 		{
@@ -271,11 +243,7 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 						if( s == 0 )
 						{
 							printf("JSON-RPC warning: Server sent headerless HTTP response\n");
-#ifdef _WIN32
-							closesocket(serverSocket);
-#else
 			                close(serverSocket);
-#endif
 							fStr_free(fStr_jsonRequestData);
 							return NULL;
 						}
@@ -309,11 +277,7 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 								if( httpCode == 401 )
 								{
 									printf("JSON-RPC: Request failed, authorization required (wrong login data)\n");
-#ifdef _WIN32
-									closesocket(serverSocket);
-#else
 							        close(serverSocket);
-#endif
 									fStr_free(fStr_jsonRequestData);
 									*errorCode = httpCode + 1000;
 									return NULL;
@@ -334,11 +298,7 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 						if( contentLength <= 0 )
 						{
 							printf("JSON-RPC warning: Content-Length header field not present\n");
-#ifdef _WIN32
-							closesocket(serverSocket);
-#else
 			                close(serverSocket);
-#endif
 							fStr_free(fStr_jsonRequestData);
 							return NULL;
 						}
@@ -364,17 +324,12 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 			}
 		}
 	}
-
 	if( recvDataHeaderEnd != 0 )
 	{
 		// close connection (we kind of force this)
 		if( serverSocket != 0 )
 		{
-#ifdef _WIN32
-			closesocket(serverSocket);
-#else
             close(serverSocket);
-#endif
 			serverSocket = 0;
 		}
 		// get request result data
@@ -400,20 +355,12 @@ jsonObject_t* jsonClient_request(jsonRequestTarget_t* server, char* methodName, 
 		// return parsed object
 		return jsonObjectReturn;
 	}
-
-
 	// close connection
 	if( serverSocket != 0 )
 	{
-#ifdef _WIN32
-		closesocket(serverSocket);
-#else
         close(serverSocket);
-#endif
 		serverSocket = 0;
 	}
-
-
 	// free everything again
 	fStr_free(fStr_jsonRequestData);
 	return NULL;

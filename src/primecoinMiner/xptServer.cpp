@@ -51,16 +51,10 @@ xptServerClient_t* xptServer_newClient(xptServer_t* xptServer, SOCKET s)
 	xptServerClient->packetbuffer = xptPacketbuffer_create(4*1024); // 4kb
 	xptServerClient->xptServer = xptServer;
 	// set socket as non-blocking
-#ifdef _WIN32
-	unsigned int nonblocking=1;
-	unsigned int cbRet;
-	WSAIoctl(s, FIONBIO, &nonblocking, sizeof(nonblocking), NULL, 0, (LPDWORD)&cbRet, NULL, NULL);
-#else
 	int flags, err;
 	flags = fcntl(s, F_GETFL, 0); 
 	flags |= O_NONBLOCK;
 	err = fcntl(s, F_SETFL, flags); //ignore errors for now..
-#endif
 	// return client object
 	return xptServerClient;
 }

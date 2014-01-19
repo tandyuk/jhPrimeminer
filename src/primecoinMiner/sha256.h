@@ -6,13 +6,7 @@
 #endif
 
 #ifndef uint32
-#if defined(__i386__)
-#define uint32 unsigned long int
-#elif defined(_WIN32) || defined(_WIN64)
-typedef unsigned __int32 uint32;
-#else
 #define uint32 unsigned int
-#endif
 #endif
 
 typedef struct

@@ -2,13 +2,14 @@
 #include <ctime>
 #include "ticker.h"
 
-
-bool MineProbablePrimeChain(CSieveOfEratosthenes*& psieve, primecoinBlock_t* block, mpz_class& bnFixedMultiplier, bool& fNewBlock, unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, 
-							unsigned int& , unsigned int& nPrimesHit, sint32 threadIndex, mpz_class& mpzHash, unsigned int nPrimorialMultiplier);
+bool MineProbablePrimeChain(CSieveOfEratosthenes*& psieve, 
+primecoinBlock_t* block, mpz_class& bnFixedMultiplier, bool& fNewBlock,
+unsigned int& nTriedMultiplier, unsigned int& nProbableChainLength, 
+unsigned int& , unsigned int& nPrimesHit, sint32 threadIndex, mpz_class& mpzHash, unsigned int nPrimorialMultiplier);
 
 std::set<mpz_class> multiplierSet;
 
-void BitcoinMiner(primecoinBlock_t* primecoinBlock, CSieveOfEratosthenes*& psieve, sint32 threadIndex)
+bool BitcoinMiner(primecoinBlock_t* primecoinBlock, CSieveOfEratosthenes*& psieve, sint32 threadIndex)
 {
 	//printf("PrimecoinMiner started\n");
 	//SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -22,19 +23,17 @@ void BitcoinMiner(primecoinBlock_t* primecoinBlock, CSieveOfEratosthenes*& psiev
 	static const unsigned int nPrimorialHashFactor = 7;
 //	const unsigned int nPrimorialMultiplierStart = 61;   unused?
 //	const unsigned int nPrimorialMultiplierMax = 79;  unused?
-
 	unsigned int nPrimorialMultiplier = primeStats.nPrimorialMultiplier;
 //	uint64_t nTimeExpected = 0;   // time expected to prime chain (micro-second)   unused?
 //	uint64_t nTimeExpectedPrev = 0; // time expected to prime chain last time   unused?
 //	bool fIncrementPrimorial = true; // increase or decrease primorial factor   unused?
 //	uint64_t nSieveGenTime = 0;   unused?
 	
-
-	//primecoinBlock->nonce = 0;
-	//TODO: check this if it makes sense
-	primecoinBlock->nonce = 0x01000000 * threadIndex;
-   const unsigned long maxNonce = (0x01000000 * threadIndex) | 0x00FF0000;
-	//primecoinBlock->nonce = 0;
+	//primecoinBlock->nonce = 0x01000000 * threadIndex;
+	//const unsigned long maxNonce = (0x01000000 * threadIndex) | 0x00FF0000;
+	//nonce fix by Aero
+	primecoinBlock->nonce = 1 * threadIndex;
+	const unsigned long maxNonce = 0xFFFFFFFF;
 
 	uint64 nTime = getTimeMilliseconds() + 1000*600;
 //	uint64 nStatTime = getTimeMilliseconds() + 2000;  unused?
@@ -66,7 +65,9 @@ void BitcoinMiner(primecoinBlock_t* primecoinBlock, CSieveOfEratosthenes*& psiev
 			if( newTimestamp != primecoinBlock->timestamp )
 			{
 				primecoinBlock->timestamp = newTimestamp;
-         	primecoinBlock->nonce = 0x01000000 * threadIndex;
+				//Aero fix Nonce
+				//primecoinBlock->nonce = 0x01000000 * threadIndex;
+				primecoinBlock->nonce = 1 * threadIndex;
 		//		primecoinBlock->nonce = 0;
 				//nPrimorialMultiplierStart = startFactorList[(threadIndex&3)];
 		//		nPrimorialMultiplier = nPrimorialMultiplierStart;
@@ -86,14 +87,13 @@ void BitcoinMiner(primecoinBlock_t* primecoinBlock, CSieveOfEratosthenes*& psiev
         mpz_set_uint256(mpzHash.get_mpz_t(), phash);
         
 		while ((phash < hashBlockHeaderLimit || !mpz_divisible_ui_p(mpzHash.get_mpz_t(), nHashFactor)) && primecoinBlock->nonce < maxNonce) {
-			primecoinBlock->nonce++;
+			primecoinBlock->nonce+=commandlineInput.numThreads;
 			primecoinBlock_generateHeaderHash(primecoinBlock, primecoinBlock->blockHeaderHash.begin());
             phash = primecoinBlock->blockHeaderHash;
             mpz_set_uint256(mpzHash.get_mpz_t(), phash);
 		}
 		//printf("Use nonce %d\n", primecoinBlock->nonce);
-		if (primecoinBlock->nonce >= maxNonce)
-		{
+		if (primecoinBlock->nonce >= maxNonce){
 			printf("Nonce overflow\n");
 			break;
 		}
@@ -132,7 +132,14 @@ void BitcoinMiner(primecoinBlock_t* primecoinBlock, CSieveOfEratosthenes*& psiev
 		// Primecoin: mine for prime chain
 		unsigned int nProbableChainLength;
 		MineProbablePrimeChain(psieve, primecoinBlock, mpzFixedMultiplier, fNewBlock, nTriedMultiplier, nProbableChainLength, nTests, nPrimesHit, threadIndex, mpzHash, nPrimorialMultiplier);
+	  
 
+
+  if (appQuitSignal)
+	    {
+	      printf( "Shutting down mining thread %d.\n", threadIndex);
+	      return false;
+	    }
 		//{
 		//	// do nothing here, share is already submitted in MineProbablePrimeChain()
 		//	//primecoinBlock->nonce += 0x00010000;
@@ -143,16 +150,15 @@ void BitcoinMiner(primecoinBlock_t* primecoinBlock, CSieveOfEratosthenes*& psiev
 		//psieve = NULL;
 		nRoundTests += nTests;
 		nRoundPrimesHit += nPrimesHit;
-		nPrimorialMultiplier = primeStats.nPrimorialMultiplier;
+		//nPrimorialMultiplier = primeStats.nPrimorialMultiplier;
 		// added this
 		//if (fNewBlock)
 		//{
 		//}
 
-
-		primecoinBlock->nonce ++;
+		primecoinBlock->nonce+=commandlineInput.numThreads;
 		//primecoinBlock->timestamp = max(primecoinBlock->timestamp, (unsigned int) time(NULL));
 		loopCount++;
 	}
-	
+	return true;
 }

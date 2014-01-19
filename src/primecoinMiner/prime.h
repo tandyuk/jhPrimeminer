@@ -6,22 +6,13 @@
 #define PRIMECOIN_PRIME_H
 
 #include <cstdlib>
-#if defined(__i386__) || defined(_M_IX86) || defined(_X86_) || defined(__x86_64__) || defined(_M_X64)
 #define USE_ROTATE
-#endif
 
-#ifdef _M_X64
+
 typedef uint64 sieve_word_t;
-#else
-typedef unsigned long sieve_word_t;
-#endif
 
 //#include "main.h"
-#ifdef _WIN32
-#include "mpirxx.h"
-#else
 #include <gmpxx.h>
-#endif
 
 extern std::vector<unsigned int> vPrimes;
 static const unsigned int nMaxSieveExtensions = 20;
@@ -50,7 +41,7 @@ static const mpz_class mpzPrimeMin = (mpzOne << 255);
 
 extern unsigned int nTargetInitialLength;
 extern unsigned int nTargetMinLength;
-extern DWORD * threadHearthBeat;
+extern uint64 * threadHearthBeat;
 
 // Generate small prime table
 void GeneratePrimeTable(unsigned int nSieveSize);
@@ -268,6 +259,10 @@ public:
       free(vCunningham2Multipliers);
     }
 
+
+	unsigned int getSieveExtensions(){
+		return this->nSieveExtensions;
+	}
 
    void Init(unsigned int nSieveSize, unsigned int nSievePercentage, unsigned int nSieveExtensions, unsigned int nTargetChainLength, unsigned int nTargetBTLength, mpz_class& mpzHash, mpz_class& mpzFixedMultiplier)
     {
